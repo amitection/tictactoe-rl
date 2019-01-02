@@ -18,6 +18,8 @@
 import common_utils
 import random
 import game_env
+from dqn import DQNAgent
+
 
 logging = common_utils.setup_logging()
 logger = logging.getLogger(__name__)
@@ -43,6 +45,8 @@ class Player:
             self.enemy_letter = 'X'
 
         logger.debug("Initializing player {} with letter {} ...".format(self.player_name, self.letter))
+
+        self.agent = DQNAgent()
 
 
     def get_move(self, game_state):
@@ -119,3 +123,52 @@ class Player:
 
         # Move on one of the sides.
         return self.__choose_random_move_from_list(board, [2, 4, 6, 8])
+
+    def drl_based_action_selection(self, game_state):
+        """
+        A DRL based approach for action selection.
+        :return: action
+        """
+        board = game_state.get_board()
+        legal_moves = game_state.get_legal_moves(board)
+        move = None
+
+        if len(legal_moves) == 0:
+            logger.warn("Something wrong. Check implementation!")
+            return
+
+        if len(legal_moves) == 1:
+            # if only one move allowed then simply make that move
+            move = legal_moves[0]
+            return move
+
+        # encode the board vector
+        encoded_state = self.__encode_state(board)
+
+        # If multiple moves available then select the most apt one using DRL
+        self.agent.get_action(encoded_state, legal_moves)
+
+    def update_learning(self, game_state, action, reward, new_state):
+        pass
+
+    def __encode_state(self, state):
+        """
+        Encodes the state vector with the following vector - (S, O, E).
+        This is done so that the learning remains consistent across games.
+        There is a clear distinction between the player's own pieces and
+        opponents pieces irrespective of the player_letter chosen(X / O).
+        S - Self
+        O - Opponent
+        E - Empty
+        :return: encoded state vector
+        """
+        encoded_state = []
+        for s in state:
+            if s == self.letter:
+                encoded_state.append('S')
+            elif s == self.enemy_letter:
+                encoded_state.append('O')
+            else:
+                encoded_state.append('E')
+
+        return encoded_state

@@ -77,6 +77,15 @@ def is_winner(bo, le):
             (bo[9] == le and bo[5] == le and bo[1] == le))  # diagonal
 
 
+def get_legal_moves(board):
+    # Return the set of physically possible moves
+    legal_moves = []
+    for i in range(1, 10):
+        if is_space_free(board, i):
+            legal_moves.append(i)
+    return legal_moves
+
+
 def is_space_free(board, move):
     # Return true if the passed move is free on the passed board.
     return board[move] == ' '
